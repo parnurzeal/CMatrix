@@ -7,6 +7,13 @@
 #include<deque>
 using namespace std;
 
+typedef struct{
+  char c;
+  int live;
+}Code;
+
+void render(deque<map<int, Code> > &matrix);
+
 int msleep(unsigned long milisec)
 {
     struct timespec req={0};
@@ -18,11 +25,6 @@ int msleep(unsigned long milisec)
         continue;
     return 1;
 }
-
-typedef struct{
-  char c;
-  int live;
-}Code;
 
 int main(void){
   static const char alpha[] =
@@ -36,21 +38,38 @@ int main(void){
   ioctl(0, TIOCGWINSZ, &w);
   int col_size = w.ws_col;
   int row_size = w.ws_row;
-  cout<< col_size<< " "<<row_size<<endl;
+  //cout<< col_size<< " "<<row_size<<endl;
   deque<map<int, Code> > matrix;
-  for(int i=0;i<10;i++){
-    map<int,Code> new_map;
-    for(int i = 0;i<10;i++){
-      int new_col = rand()%col_size+1;
-      int new_live = rand()%row_size+1;
-      char new_c = alpha[rand()%alphaSize];
-      //cout<<new_c<<endl;
-      //cout<<new_col<<" "<<new_live<<" "<<new_c<<endl;
-      Code new_code = { new_c, new_live};
-      new_map[new_col] = new_code;
+  matrix.push_front(map<int,Code>());
+  for(;;){
+    map<int,Code> new_map = matrix[0];
+    int new_col = rand()%col_size+1;
+    int new_live = rand()%row_size+1;
+    Code empty_code = {'0',new_live};
+    new_map[new_col] = empty_code;
+    for(map<int,Code>::iterator it = new_map.begin();it!=new_map.end();){
+      int new_c = alpha[rand()%alphaSize];
+      it->second.c = new_c;
+      it->second.live--;
+      // clear 0 live code
+      if(it->second.live==0){
+        new_map.erase(it);
+      }else{
+        it++;
+      }
     }
     matrix.push_front(new_map);
+    // clear row that out of terminal
+    if(matrix.size()>row_size){
+      matrix.erase(matrix.begin()+row_size,matrix.end());
+    }
+    render(matrix);
   }
+  msleep(1000L);
+  return 0;
+}
+
+void render(deque<map<int, Code> > &matrix){
   // clear screen
   printf("\033[2J\033[1;1H");
   // render
@@ -60,11 +79,8 @@ int main(void){
       Code print_code = it->second;
       printf("\033[%d;%dH",i,print_col);//, 0, print_col);
       printf("%c",print_code.c);
-      //printf("hello");
-      //printf("%c",print_code.c);
-      fflush(stdout);
     }
   }
-  msleep(1000L);
-  return 0;
+  fflush(stdout);
+  msleep(100);
 }
