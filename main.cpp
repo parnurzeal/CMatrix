@@ -1,6 +1,7 @@
 #include<iostream>
 #include<vector>
 #include<stdio.h>
+#include <stdlib.h>
 #include<ctime>
 #include<sys/ioctl.h>
 #include<map>
